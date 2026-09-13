@@ -1,56 +1,33 @@
-# Welcome to your Expo app 👋
+# Whiskr
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Whiskr is a calm field journal for noticing the cats who share your neighborhood. It is an Expo 55 + TypeScript app with Expo Router, native iOS/Android navigation, and a web-friendly preview.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run locally
 
 ```bash
-npm run reset-project
+npm install
+npm run start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Use `a` for Android, `i` for iOS, or `w` for the web preview. Expo SDK 55 requires Node.js 20.19 or newer.
 
-### Other setup steps
+## Supabase
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+1. Create a Supabase project.
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in the SQL Editor.
+3. Add the project URL and anon key to your app configuration when the remote sync layer is connected.
 
-## Learn more
+The schema includes `entries`, `cats`, `purr_packs`, `badges`, and `streaks`, with user-scoped RLS policies and a nightly streak recomputation function. Exact coordinates remain private to the owning user; public sharing should fuzz them before publishing.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Current prototype
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The journal, atlas, regulars, studio, and profile tabs are navigable. The journal includes sample sightings, vibe filters, entry details, a local capture sheet, and a haptic save cue. Studio provides a canvas preview and Purr Pack action; camera, GPS, offline SQLite sync, auth, and transparent PNG export are the next integration layer.
 
-## Join the community
+## EAS builds
 
-Join our community of developers creating universal apps.
+```bash
+npx eas build --platform all
+npx eas submit --platform all
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Before a store build, add camera and location permission copy to `app.json`, configure production Supabase environment variables, and test the offline queue on both platforms.

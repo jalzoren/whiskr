@@ -1,98 +1,47 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
+import React, { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { Sighting, sightings as starterSightings, vibeColors, vibeLabels } from '@/constants/sightings';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+const filters = ['All', 'Sleepy', 'Mysterious', 'Playful'];
+
+export default function JournalScreen() {
+  const theme = useTheme();
+  const [filter, setFilter] = useState('All');
+  const [sightings, setSightings] = useState(starterSightings);
+  const [selected, setSelected] = useState<Sighting | null>(null);
+  const [isComposerOpen, setComposerOpen] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const visibleSightings = filter === 'All' ? sightings : sightings.filter((item) => vibeLabels[item.vibe] === filter);
+
+  function saveSighting() {
+    const newSighting: Sighting = { id: `new-${Date.now()}`, name: nickname.trim() || 'New friend', photo: starterSightings[1].photo, place: 'Near you', time: 'Just now', vibe: 'chill', note: 'A fresh little moment for the journal.', visits: 1 };
+    setSightings((current) => [newSighting, ...current]);
+    setNickname('');
+    setComposerOpen(false);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
+
+  return <ThemedView style={styles.screen}><SafeAreaView edges={['top']} style={styles.safeArea}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={styles.headerRow}><View><ThemedText style={styles.eyebrow} themeColor="textSecondary">MONDAY, JUNE 2</ThemedText><ThemedText type="subtitle" style={styles.heading}>Field journal</ThemedText></View><Pressable onPress={() => setComposerOpen(true)} style={styles.profileDot} accessibilityLabel="New sighting"><ThemedText style={styles.profileMark}>+</ThemedText></Pressable></View>
+    <View style={styles.streakBanner}><View style={styles.streakIcon}><ThemedText style={styles.streakGlyph}>✦</ThemedText></View><View style={styles.streakCopy}><ThemedText type="smallBold">Seven days of noticing</ThemedText><ThemedText type="small" themeColor="textSecondary">Your neighborhood is looking back.</ThemedText></View><ThemedText style={styles.streakCount}>7</ThemedText></View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>{filters.map((item) => { const active = filter === item; return <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filterChip, active && { backgroundColor: theme.text }]}><ThemedText type="smallBold" style={active ? { color: theme.background } : undefined}>{item}</ThemedText></Pressable>; })}</ScrollView>
+    <View style={styles.monthRow}><ThemedText type="smallBold" themeColor="textSecondary">JUNE 2025</ThemedText><View style={styles.monthLine} /></View>
+    {visibleSightings.map((item) => <SightingCard key={item.id} sighting={item} onPress={() => setSelected(item)} />)}
+    <View style={styles.capturePrompt}><ThemedText style={styles.promptTitle}>Saw a friend?</ThemedText><ThemedText type="small" themeColor="textSecondary">Keep the little moments somewhere safe.</ThemedText><Pressable onPress={() => setComposerOpen(true)} style={styles.captureButton}><ThemedText style={styles.captureButtonText}>+ New sighting</ThemedText></Pressable></View>
+  </ScrollView></SafeAreaView>
+  <Modal visible={Boolean(selected)} animationType="slide" transparent onRequestClose={() => setSelected(null)}><View style={styles.modalBackdrop}><View style={[styles.detailSheet, { backgroundColor: theme.background }]}>{selected && <><Image source={{ uri: selected.photo }} style={styles.detailImage} contentFit="cover" /><View style={styles.sheetBody}><View style={styles.sheetTitleRow}><View><ThemedText type="subtitle" style={styles.sheetTitle}>{selected.name}</ThemedText><ThemedText type="small" themeColor="textSecondary">{selected.place} · {selected.time}</ThemedText></View><View style={[styles.vibeBadge, { backgroundColor: vibeColors[selected.vibe] }]}><ThemedText style={styles.vibeText}>{vibeLabels[selected.vibe]}</ThemedText></View></View><ThemedText style={styles.note}>{selected.note}</ThemedText><Pressable onPress={() => setSelected(null)} style={styles.closeButton}><ThemedText type="smallBold">Close journal entry</ThemedText></Pressable></View></>}</View></View></Modal>
+  <Modal visible={isComposerOpen} animationType="slide" transparent onRequestClose={() => setComposerOpen(false)}><View style={styles.modalBackdrop}><View style={[styles.composer, { backgroundColor: theme.background }]}><View style={styles.handle} /><ThemedText type="subtitle" style={styles.sheetTitle}>A new little friend</ThemedText><ThemedText style={styles.composerCopy} themeColor="textSecondary">The camera is ready when you are. Add a nickname and we&apos;ll stash a sample snapshot in your journal.</ThemedText><TextInput value={nickname} onChangeText={setNickname} placeholder="Nickname (optional)" placeholderTextColor={theme.textSecondary} style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]} /><Pressable onPress={saveSighting} style={styles.saveButton}><ThemedText style={styles.saveButtonText}>Save sighting</ThemedText></Pressable><Pressable onPress={() => setComposerOpen(false)} style={styles.cancelButton}><ThemedText type="smallBold" themeColor="textSecondary">Maybe later</ThemedText></Pressable></View></View></Modal>
+  </ThemedView>;
 }
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+function SightingCard({ sighting, onPress }: { sighting: Sighting; onPress: () => void }) { return <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}><Image source={{ uri: sighting.photo }} style={styles.cardImage} contentFit="cover" transition={250} /><View style={styles.cardContent}><View style={styles.cardTop}><ThemedText type="smallBold">{sighting.name}</ThemedText><View style={[styles.vibeBadge, { backgroundColor: vibeColors[sighting.vibe] }]}><ThemedText style={styles.vibeText}>{vibeLabels[sighting.vibe]}</ThemedText></View></View><ThemedText type="small" themeColor="textSecondary">{sighting.place} · {sighting.time}</ThemedText><ThemedText style={styles.cardNote}>{sighting.note}</ThemedText></View></Pressable>; }
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
+const styles = StyleSheet.create({ screen: { flex: 1 }, safeArea: { flex: 1 }, content: { padding: Spacing.four, paddingBottom: 130, gap: Spacing.three }, headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Spacing.two }, eyebrow: { fontSize: 11, letterSpacing: 1.5, fontWeight: '700' }, heading: { marginTop: 2, fontSize: 34, lineHeight: 40 }, profileDot: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#D4A23A', justifyContent: 'center', alignItems: 'center' }, profileMark: { fontSize: 28, color: '#FFF9E9', fontWeight: '300' }, streakBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E4EBDD', borderRadius: 18, padding: Spacing.three }, streakIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#B4CBAE', justifyContent: 'center', alignItems: 'center' }, streakGlyph: { color: '#36503D', fontSize: 20 }, streakCopy: { flex: 1, marginLeft: Spacing.two }, streakCount: { fontSize: 28, fontWeight: '700', color: '#36503D' }, filterRow: { gap: 8 }, filterChip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, backgroundColor: '#E8ECE5' }, monthRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 }, monthLine: { flex: 1, height: 1, backgroundColor: '#DCE2D9' }, card: { flexDirection: 'row', gap: 14, paddingVertical: 6, alignItems: 'center' }, pressed: { opacity: 0.65 }, cardImage: { width: 104, height: 104, borderRadius: 18, backgroundColor: '#DDE3DB' }, cardContent: { flex: 1, gap: 4 }, cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, vibeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }, vibeText: { fontSize: 10, fontWeight: '700', color: '#FFFDF6' }, cardNote: { fontSize: 14, lineHeight: 20, marginTop: 4 }, capturePrompt: { borderTopWidth: 1, borderColor: '#DFE4DC', paddingTop: Spacing.four, marginTop: Spacing.two }, promptTitle: { fontSize: 22, fontWeight: '700' }, captureButton: { alignSelf: 'flex-start', backgroundColor: '#24332E', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 14, marginTop: 14 }, captureButtonText: { color: '#F7F6F1', fontWeight: '700' }, modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(24,35,30,0.35)' }, detailSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden' }, detailImage: { width: '100%', height: 280 }, sheetBody: { padding: Spacing.four, gap: Spacing.three }, sheetTitle: { fontSize: 30 }, sheetTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }, note: { fontSize: 18, lineHeight: 26 }, closeButton: { alignItems: 'center', paddingVertical: 14, borderRadius: 14, backgroundColor: '#E8ECE5' }, composer: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: Spacing.four, paddingBottom: 34, gap: Spacing.three }, handle: { width: 42, height: 5, borderRadius: 4, backgroundColor: '#C7CEC5', alignSelf: 'center' }, composerCopy: { fontSize: 16, lineHeight: 24 }, input: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16 }, saveButton: { backgroundColor: '#24332E', borderRadius: 14, alignItems: 'center', paddingVertical: 15 }, saveButtonText: { color: '#F7F6F1', fontSize: 16, fontWeight: '700' }, cancelButton: { alignItems: 'center', paddingVertical: 8 } });

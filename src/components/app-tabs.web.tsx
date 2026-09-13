@@ -10,7 +10,6 @@ import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
 
-import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -22,11 +21,20 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+          <TabTrigger name="journal" href="/" asChild>
+            <TabButton>Journal</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="atlas" href="/atlas" asChild>
+            <TabButton>Atlas</TabButton>
+          </TabTrigger>
+          <TabTrigger name="regulars" href="/regulars" asChild>
+            <TabButton>Regulars</TabButton>
+          </TabTrigger>
+          <TabTrigger name="studio" href="/studio" asChild>
+            <TabButton>Studio</TabButton>
+          </TabTrigger>
+          <TabTrigger name="you" href="/you" asChild>
+            <TabButton>You</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -56,21 +64,12 @@ export function CustomTabList(props: TabListProps) {
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
+          WHISKR
         </ThemedText>
 
         {props.children}
 
-        <ExternalLink href="https://docs.expo.dev" asChild>
-          <Pressable style={styles.externalPressable}>
-            <ThemedText type="link">Docs</ThemedText>
-            <SymbolView
-              tintColor={colors.text}
-              name={{ ios: 'arrow.up.right.square', web: 'link' }}
-              size={12}
-            />
-          </Pressable>
-        </ExternalLink>
+        <ThemedText type="small" themeColor="textSecondary">7-day streak</ThemedText>
       </ThemedView>
     </View>
   );
@@ -105,12 +104,5 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
     borderRadius: Spacing.three,
-  },
-  externalPressable: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.one,
-    marginLeft: Spacing.three,
   },
 });
