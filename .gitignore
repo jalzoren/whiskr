@@ -1,43 +1,55 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# ── Environment & secrets ─────────────────────────────
+.env
+.env.*
+!.env.example
 
-# dependencies
-node_modules/
-
-# Expo
+# ── Expo / EAS ────────────────────────────────────────
 .expo/
+.expo-shared/
 dist/
 web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.orig.*
+ios/
+android/
 
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
+# ── EAS / Credentials ─────────────────────────────────
+eas.json
+credentials.json
 *.pem
 
-# local env files
-.env*.local
+# ── Supabase ──────────────────────────────────────────
+supabase/.branches
+supabase/.temp
 
-# typescript
+# ── Node / package managers ───────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ── Build output ──────────────────────────────────────
+build/
+coverage/
 *.tsbuildinfo
 
-app-example
+# ── Logs ──────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
 
-# generated native folders
-/ios
-/android
+# ── OS / Editor ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
